@@ -1,7 +1,9 @@
-﻿using HotmartAPI.Hotmart.Models.Purchases;
+﻿using HotmartAPI.Data.Entities;
+using HotmartAPI.Hotmart.Models.Purchases;
 using HotmartAPI.Hotmart.Models.Subscriptions;
 using HotmartAPI.Repository;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace HotmartAPI.Services
@@ -17,62 +19,61 @@ namespace HotmartAPI.Services
             _repository = repository;
         }
 
-        public void PurchaseBilletPrinted(PurchaseBilletPrinted purchaseBilletPrinted)
+        public IEnumerable<Order> GetAllOrders()
+        {
+            return _repository.GetAll();
+        }
+
+        /// <summary>
+        /// Pagamento aprovado
+        /// </summary>
+        /// <param name="purchaseApproved"></param>
+        public void PurchaseApproved(PurchaseApproved purchaseApproved)
         {
             var newOrder = new Data.Entities.Order
             {
-                BuyerEmail = purchaseBilletPrinted.Buyer.Email,
-                Status = purchaseBilletPrinted.Purchase.Status,
-                Transaction = purchaseBilletPrinted.Purchase.Transaction,
+                BuyerEmail = purchaseApproved.Buyer.Email,
+                Status = purchaseApproved.Purchase.Status,
+                Transaction = purchaseApproved.Purchase.Transaction,
                 ExpirationDate = default,
-                SubscriberCode = purchaseBilletPrinted.Subscription.Subscriber.Code,
-                SubscriptionPlanName = purchaseBilletPrinted.Subscription.Plan.Name,
-                SubscriptionStatus = purchaseBilletPrinted?.Subscription.Status
+                SubscriberCode = purchaseApproved.Subscription.Subscriber.Code,
+                SubscriptionPlanName = purchaseApproved.Subscription.Plan.Name,
+                SubscriptionStatus = purchaseApproved?.Subscription.Status
             };
 
-            // Verifica se o pedido já existe no banco de dados e atualiza
-            var order = _repository.GetOrderByEmailAndTransaction(purchaseBilletPrinted.Buyer.Email, purchaseBilletPrinted.Purchase.Transaction);
-            if (order != null)
+            // Verifica se o pedido já existe no banco.
+            var order = _repository.GetOrderByEmailAndCode(purchaseApproved.Buyer.Email, purchaseApproved.Subscription.Subscriber.Code);
+            if (order == null)
             {
-                var updatedOrder = _repository.Update(newOrder);
-                return;
+                var createdOrder = _repository.Create(newOrder);
+                _logger.LogInformation("Pedido {0} criado, status: {1}", newOrder.Transaction, newOrder.Status);
             }
-
-            var createdOrder = _repository.Create(newOrder);
-            _logger.LogInformation("Pedido {0} criado, status: {1}", order.Transaction, order.Status);
+            else
+            {
+                newOrder.Id = order.Id;
+                var updatedOrder = _repository.Update(newOrder);
+                _logger.LogInformation("Pedido {0} modificado, status: {1}", order.Transaction, order.Status);
+            }
         }
 
         /// <summary>
         /// Status da compra atualizado
         /// </summary>
         /// <param name="purchaseUpdated">dados do pedido atualizado</param>
-        public void PurchaseUpdated(PurchaseUpdated purchaseUpdated)
+        public void PurchaseUpdated(PurchaseUpdated purchaseUpdated, bool isPurchaseComplete)
         {
-            var order = _repository.GetOrderByEmailAndCode(purchaseUpdated.Buyer.Email, purchaseUpdated.Purchase.Transaction);
+            var order = _repository.GetOrderByEmailAndTransaction(purchaseUpdated.Buyer.Email, purchaseUpdated.Purchase.Transaction);
             if (order == null)
                 return;
 
             order.Status = purchaseUpdated.Purchase.Status;
-            order.SubscriptionStatus = "INACTIVE";
+            if (!isPurchaseComplete)
+                order.SubscriptionStatus = "INACTIVE";
             _repository.Update(order);
-            _logger.LogInformation("Status do pedido: {0}, alterado para {1}", order.Transaction, order.Status);
+            _logger.LogInformation("Status do pedido: {0}, alterado para: {1}", order.Transaction, order.Status);
         }
 
-        /// <summary>
-        /// Compra reembolsada
-        /// </summary>
-        /// <param name="purchaseRefunded"></param>
-        public void PurchaseRefunded(PurchaseRefunded purchaseRefunded)
-        {
-            var order = _repository.GetOrderByEmailAndTransaction(purchaseRefunded.Buyer.Email, purchaseRefunded.Purchase.Transaction);
-            if (order == null)
-                return;
-
-            order.Status = purchaseRefunded.Purchase.Status;
-            order.SubscriptionStatus = "INACTIVE";
-            _repository.Update(order);
-            _logger.LogInformation("Status do pedido: {0}, alterado para {1}", order.Transaction, order.Status);
-        }
+        #region Troca de Plano e Cancelamento de Assinatura
 
         /// <summary>
         /// Troca de plano
@@ -83,7 +84,7 @@ namespace HotmartAPI.Services
             var order = _repository.GetOrderByEmailAndCode(SwitchPlan.Subscription.User.Email, SwitchPlan.Subscription.SubscriberCode);
             if (order == null)
             {
-                _logger.LogError("(SwitchPlan) Pedido de email {0} e código do assinante {1} não encontrados", SwitchPlan.Subscription.User.Email, SwitchPlan.Subscription.SubscriberCode);
+                _logger.LogError("(SwitchPlan) Pedido de email: {0}, e código do assinante: {1} não encontrados", SwitchPlan.Subscription.User.Email, SwitchPlan.Subscription.SubscriberCode);
                 return;
             }
 
@@ -95,7 +96,28 @@ namespace HotmartAPI.Services
             order.SubscriptionStatus = SwitchPlan.Subscription.Status;
 
             _repository.Update(order);
-            _logger.LogInformation("(SwitchPlan) plano do pedido: {0}, alterado de {1} para {2}", order.Transaction, plano?.Name, plano2?.Name);
+            _logger.LogInformation("(SwitchPlan) Plano do pedido: {0}, alterado de {1} para {2}", order.Transaction, plano?.Name, plano2?.Name);
         }
+
+        /// <summary>
+        /// Cancelamento de Assinatura
+        /// </summary>
+        /// <param name="subscriptionCancellation"></param>
+        public void SubscriptionCancellation(SubscriptionCancellation cancellation)
+        {
+            var order = _repository.GetOrderByEmailAndCode(cancellation.Subscriber.Email, cancellation.Subscriber.Code);
+            if (order == null)
+            {
+                _logger.LogError("(SubscriptionCancellation) Pedido de email: {0}, e código do assinante: {1} não encontrados", cancellation.Subscriber.Email, cancellation.Subscriber.Code);
+                return;
+            }
+
+            order.Status = "CANCELLED";
+            order.SubscriptionStatus = "INACTIVE";
+            _repository.Update(order);
+            _logger.LogInformation("(SubscriptionCancellation) Assinatura do pedido: {0} cancelada!", order.Transaction);
+        }
+
+        #endregion
     }
 }

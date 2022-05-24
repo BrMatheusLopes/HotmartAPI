@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace HotmartAPI.Helpers
 {
@@ -15,6 +16,7 @@ namespace HotmartAPI.Helpers
                 AllowTrailingCommas = true,
                 PropertyNameCaseInsensitive = true,
                 WriteIndented = writeIndented,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
             };
 
             return JsonSerializer.Serialize(obj, options);

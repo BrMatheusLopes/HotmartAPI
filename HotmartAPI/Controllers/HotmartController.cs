@@ -20,12 +20,6 @@ namespace HotmartAPI.Controllers
             _handleUpdateService = handleUpdateService;
         }
 
-        [HttpGet]
-        public IActionResult Index()
-        {
-            return View();
-        }
-
         [HttpPost]
         public IActionResult Post([FromBody] HotmartUpdate hotmartUpdate)
         {
@@ -35,46 +29,52 @@ namespace HotmartAPI.Controllers
                 _logger.LogInformation("HasX_HOTMART_HOTTOK: {0}, Hottok value: {1}", HasX_HOTMART_HOTTOK, hottok);
                 return Unauthorized();
             }
-            var isSuccess = false;
+
             try
             {
                 switch (hotmartUpdate.Event)
                 {
-                    case "PURCHASE_OUT_OF_SHOPPING_CART":
-                        break;
-                    case "PURCHASE_BILLET_PRINTED": // Aguardando pagamento
-                    case "PURCHASE_APPROVED": // Compra aprovada
-                        var purchaseBilletPrinted = hotmartUpdate.Data.ToObject<PurchaseBilletPrinted>();
-                        _handleUpdateService.PurchaseBilletPrinted(purchaseBilletPrinted);
-                        break;
+                    case "PURCHASE_OUT_OF_SHOPPING_CART": // Abandono de carrinho
+                    case "PURCHASE_DELAYED": // Compra atrasada
+                    case "PURCHASE_PROTEST": // Compra => Pedido de reembolso
                     case "PURCHASE_EXPIRED": // Compra expirada
+                        break;
+                    //case "PURCHASE_BILLET_PRINTED": // Aguardando pagamento
+                    case "PURCHASE_APPROVED": // Compra aprovada
+                        var purchaseApproved = hotmartUpdate.Data.ToObject<PurchaseApproved>();
+                        _handleUpdateService.PurchaseApproved(purchaseApproved);
+                        break;
                     case "PURCHASE_CHARGEBACK": // Chargeback
                     case "PURCHASE_REFUNDED": // Compra reembolsada
                     case "PURCHASE_CANCELED": // Compra cancelada
                     case "PURCHASE_COMPLETE": // Compra completa
                         var purchaseUpdated = hotmartUpdate.Data.ToObject<PurchaseUpdated>();
-                        _handleUpdateService.PurchaseUpdated(purchaseUpdated);
+                        _handleUpdateService.PurchaseUpdated(purchaseUpdated, hotmartUpdate.Event == "PURCHASE_COMPLETE");
                         break;
                     case "SWITCH_PLAN": // Assinatura => Troca de plano
                         var switchPlan = hotmartUpdate.Data.ToObject<SwitchPlan>();
                         _handleUpdateService.SwitchPlan(switchPlan);
                         break;
                     case "SUBSCRIPTION_CANCELLATION": // Assinatura => Cancelamento de Assinatura
-                        var cancellation = hotmartUpdate.Data.ToObject<SubscriptionCancellation>();
-                        _logger.LogInformation("SubscriptionCancellation: {0}", cancellation.Product.Name);
-                        break;
-                    case "PURCHASE_DELAYED": // Compra atrasada
-                    case "PURCHASE_PROTEST": // Compra => Pedido de reembolso
-                        // Ignore
+                        var subscriptionCancellation = hotmartUpdate.Data.ToObject<SubscriptionCancellation>();
+                        _handleUpdateService.SubscriptionCancellation(subscriptionCancellation);
                         break;
                 }
-
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
+        }
+
+        [HttpGet("api/hotmart")]
+        public IActionResult GetAllOrders([FromQuery(Name = "password")] string password)
+        {
+            if (password != "heroku_hotmart_orders")
+                return Unauthorized();
+
+            return Ok(_handleUpdateService.GetAllOrders());
         }
     }
 }

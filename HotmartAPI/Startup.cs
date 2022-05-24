@@ -1,5 +1,9 @@
+using HotmartAPI.Data;
+using HotmartAPI.Repository;
+using HotmartAPI.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,7 +22,6 @@ namespace HotmartAPI
             {
                 HotmartConfig = new HotmartConfiguration
                 {
-                    ApiToken = Environment.GetEnvironmentVariable("ApiToken"),
                     Hottok = Environment.GetEnvironmentVariable("Hottok"),
                 };
                 return;
@@ -32,6 +35,9 @@ namespace HotmartAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<RepositoryContext>(options => options.UseNpgsql(Configuration.GetConnectionString("postgreSQL")));
+            services.AddScoped<HandleUpdateService>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddControllers();
         }
 

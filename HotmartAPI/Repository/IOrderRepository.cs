@@ -8,7 +8,7 @@ namespace HotmartAPI.Repository
         IEnumerable<Order> GetAll();
         Order GetOrderByEmailAndCode(string email, string code);
         Order GetOrderByEmailAndTransaction(string email, string transaction);
-        Order Create (Order order); 
+        Order Create(Order order);
         Order Update(Order order);
     }
 }

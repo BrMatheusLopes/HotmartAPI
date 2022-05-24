@@ -17,14 +17,10 @@ namespace HotmartAPI
                 {
                     var port = Environment.GetEnvironmentVariable("PORT");
                     if (string.IsNullOrEmpty(port))
-                    {
                         webBuilder.UseStartup<Startup>();
-                    }
                     else
-                    {
                         webBuilder.UseStartup<Startup>()
-                            .UseUrls("http://*:" + port);
-                    }
+                                  .UseUrls("http://*:" + port);
                 });
     }
 }
