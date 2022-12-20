@@ -15,42 +15,18 @@ namespace HotmartAPI.Controllers
     {
         private readonly IOrderRepository _repository;
         private readonly ILogger<LicenseController> _logger;
-        private const string Token = "3710A7F08220611D3C147180358DF75BC40CC1D94C8F5F0263C4EBAE5C4F6FAD";
+
         public LicenseController(IOrderRepository repository, ILogger<LicenseController> logger)
         {
             _repository = repository;
             _logger = logger;
         }
 
-        /*        [HttpPost]
-                public IActionResult Post([FromBody] LicenseResponse license)
-                {
-                    var HasToken = Request.Headers.TryGetValue("X-TOKEN", out var token);
-                    if (!HasToken || token != Token)
-                        return Unauthorized(new License { Msg = "Licença inválida!" }.SerializeToJson());
-
-                    if (license == null || string.IsNullOrEmpty(license.Email) || string.IsNullOrEmpty(license.Transaction))
-                        return Unauthorized(new License { Msg = "Licença inválida!" }.SerializeToJson());
-
-                    var order = _repository.GetOrderByEmailAndTransaction(license.Email, license.Transaction);
-                    if (order == null)
-                        return NotFound(new License { Msg = "Licença não encontrada!"}.SerializeToJson());
-
-                    return Ok(new License
-                    {
-                        BuyerEmail = order.BuyerEmail,
-                        Status = order.Status,
-                        ExpirationDate = order.ExpirationDate,
-                        SubscriptionPlanName = order.SubscriptionPlanName,
-                        SubscriptionStatus = order.SubscriptionStatus
-                    });
-                }*/
-
         [HttpPost]
         public IActionResult Post([FromBody] LicenseResponse license)
         {
             var HasToken = Request.Headers.TryGetValue("X-TOKEN", out var token);
-            if (!HasToken || token != Token)
+            if (!HasToken || token != Constants.Token)
                 return Unauthorized(ReturnErrorMessage("Licença inválida!"));
 
             if (license == null || string.IsNullOrEmpty(license.Email) || string.IsNullOrEmpty(license.Transaction))
@@ -60,7 +36,18 @@ namespace HotmartAPI.Controllers
             if (order == null)
                 return NotFound(ReturnErrorMessage("Licença não encontrada!"));
 
-            return Ok(ReturnOKMessage(order));
+            string msg = "Sua licença expirou!";
+            if (order.SubscriptionStatus == "ACTIVE")
+            {                
+                // Verifica se a licença expirou
+                var timeNow = DateTime.Now;
+                if (timeNow > order.ExpirationDate)
+                {
+                    order.SubscriptionStatus = "EXPIRED";
+                }
+            }
+
+            return Ok(ReturnOKMessage(order, msg));
         }
 
         private string ReturnErrorMessage(string message)
@@ -68,10 +55,11 @@ namespace HotmartAPI.Controllers
             return CryptoHelper.Encrypt(new License { Msg = message }.SerializeToJson(), Constants.Password);
         }
 
-        private string ReturnOKMessage(Order order)
+        private string ReturnOKMessage(Order order, string message = null)
         {
             return CryptoHelper.Encrypt(new License
             {
+                Msg = message,
                 BuyerEmail = order.BuyerEmail,
                 Status = order.Status,
                 ExpirationDate = order.ExpirationDate,

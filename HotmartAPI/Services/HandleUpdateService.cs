@@ -3,6 +3,7 @@ using HotmartAPI.Hotmart.Models.Purchases;
 using HotmartAPI.Hotmart.Models.Subscriptions;
 using HotmartAPI.Repository;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -35,9 +36,9 @@ namespace HotmartAPI.Services
                 BuyerEmail = purchaseApproved.Buyer.Email,
                 Status = purchaseApproved.Purchase.Status,
                 Transaction = purchaseApproved.Purchase.Transaction,
-                ExpirationDate = default,
+                ExpirationDate = GetExpirationTimeByPlan(purchaseApproved.Subscription.Plan.Name),
                 SubscriberCode = purchaseApproved.Subscription.Subscriber.Code,
-                SubscriptionPlanName = purchaseApproved.Subscription.Plan.Name,
+                SubscriptionPlanName = purchaseApproved.Subscription.Plan.Name.Trim(),
                 SubscriptionStatus = purchaseApproved?.Subscription.Status
             };
 
@@ -54,6 +55,25 @@ namespace HotmartAPI.Services
                 var updatedOrder = _repository.Update(newOrder);
                 _logger.LogInformation("Pedido {0} modificado, status: {1}", order.Transaction, order.Status);
             }
+        }
+
+        private DateTime GetExpirationTimeByPlan(string planName)
+        {
+            var timeNow = DateTime.UtcNow;
+            switch (planName.ToLower().Trim())
+            {
+                case "plano mensal":
+                    timeNow = timeNow.AddMonths(1);
+                    break;
+                case "plano trimestral":
+                    timeNow = timeNow.AddMonths(3);
+                    break;
+                default:
+                    _logger.LogError("Plano >{0}< não encontrado", planName);
+                    break;
+            }
+
+            return timeNow;
         }
 
         /// <summary>

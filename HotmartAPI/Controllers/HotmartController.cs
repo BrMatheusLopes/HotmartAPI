@@ -37,7 +37,6 @@ namespace HotmartAPI.Controllers
                     case "PURCHASE_OUT_OF_SHOPPING_CART": // Abandono de carrinho
                     case "PURCHASE_DELAYED": // Compra atrasada
                     case "PURCHASE_PROTEST": // Compra => Pedido de reembolso
-                    case "PURCHASE_EXPIRED": // Compra expirada
                         break;
                     //case "PURCHASE_BILLET_PRINTED": // Aguardando pagamento
                     case "PURCHASE_APPROVED": // Compra aprovada
@@ -48,6 +47,7 @@ namespace HotmartAPI.Controllers
                     case "PURCHASE_REFUNDED": // Compra reembolsada
                     case "PURCHASE_CANCELED": // Compra cancelada
                     case "PURCHASE_COMPLETE": // Compra completa
+                    case "PURCHASE_EXPIRED": // Compra expirada
                         var purchaseUpdated = hotmartUpdate.Data.ToObject<PurchaseUpdated>();
                         _handleUpdateService.PurchaseUpdated(purchaseUpdated, hotmartUpdate.Event == "PURCHASE_COMPLETE");
                         break;

@@ -35,7 +35,8 @@ namespace HotmartAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<RepositoryContext>(options => options.UseNpgsql(Configuration.GetConnectionString("postgreSQL")));
+            string connectionString = Environment.GetEnvironmentVariable("postgreSQL") ?? Configuration.GetConnectionString("postgreSQL");
+            services.AddDbContext<RepositoryContext>(options => options.UseNpgsql(connectionString));
             services.AddScoped<HandleUpdateService>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddControllers();
