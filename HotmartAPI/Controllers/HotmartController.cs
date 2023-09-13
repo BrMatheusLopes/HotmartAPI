@@ -1,6 +1,6 @@
-﻿using HotmartAPI.Hotmart.Models;
-using HotmartAPI.Hotmart.Models.Purchases;
-using HotmartAPI.Hotmart.Models.Subscriptions;
+﻿using HotmartAPI.Models.Hotmart;
+using HotmartAPI.Models.Hotmart.Purchases;
+using HotmartAPI.Models.Hotmart.Subscriptions;
 using HotmartAPI.Services;
 using HotmartAPI.Utils.Extensions;
 using Microsoft.AspNetCore.Mvc;

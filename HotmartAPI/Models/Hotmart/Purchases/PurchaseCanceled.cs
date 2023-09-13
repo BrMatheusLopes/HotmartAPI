@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace HotmartAPI.Hotmart.Models.Purchases
+namespace HotmartAPI.Models.Hotmart.Purchases
 {
-    public class PurchaseChargeback
+    public class PurchaseCanceled
     {
         [JsonPropertyName("product")]
         public Product Product { get; set; }

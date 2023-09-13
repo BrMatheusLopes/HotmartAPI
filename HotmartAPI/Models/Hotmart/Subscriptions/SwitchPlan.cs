@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace HotmartAPI.Hotmart.Models.Subscriptions
+namespace HotmartAPI.Models.Hotmart.Subscriptions
 {
     public class SwitchPlan
     {

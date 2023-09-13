@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace HotmartAPI.Hotmart.Models
+namespace HotmartAPI.Models.Hotmart
 {
     public class HotmartUpdate
     {

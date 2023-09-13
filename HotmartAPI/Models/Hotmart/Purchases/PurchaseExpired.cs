@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace HotmartAPI.Hotmart.Models.Purchases
+namespace HotmartAPI.Models.Hotmart.Purchases
 {
-    public class PurchaseRefunded
+    public class PurchaseExpired
     {
         [JsonPropertyName("product")]
         public Product Product { get; set; }

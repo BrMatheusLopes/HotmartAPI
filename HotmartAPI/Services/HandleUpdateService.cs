@@ -1,6 +1,6 @@
 ﻿using HotmartAPI.Data.Entities;
-using HotmartAPI.Hotmart.Models.Purchases;
-using HotmartAPI.Hotmart.Models.Subscriptions;
+using HotmartAPI.Models.Hotmart.Purchases;
+using HotmartAPI.Models.Hotmart.Subscriptions;
 using HotmartAPI.Repository;
 using Microsoft.Extensions.Logging;
 using System;

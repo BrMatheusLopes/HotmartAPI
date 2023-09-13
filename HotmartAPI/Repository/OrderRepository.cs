@@ -21,12 +21,12 @@ namespace HotmartAPI.Repository
 
         public Order GetOrderByEmailAndCode(string email, string code)
         {
-            return _context.Orders.SingleOrDefault(x => x.BuyerEmail.Equals(email) && x.SubscriberCode.Equals(code));
+            return _context.Orders.LastOrDefault(x => x.BuyerEmail.Equals(email) && x.SubscriberCode.Equals(code));
         }
 
         public Order GetOrderByEmailAndTransaction(string email, string transaction)
         {
-            return _context.Orders.SingleOrDefault(x => x.BuyerEmail.Equals(email) && x.Transaction.Equals(transaction));
+            return _context.Orders.LastOrDefault(x => x.BuyerEmail.Equals(email) && x.Transaction.Equals(transaction));
         }
 
         public Order Create(Order order)
@@ -38,7 +38,7 @@ namespace HotmartAPI.Repository
 
         public Order Update(Order order)
         {
-            var result = _context.Orders.SingleOrDefault(x => x.BuyerEmail.Equals(order.BuyerEmail) && x.SubscriberCode.Equals(order.SubscriberCode));
+            var result = _context.Orders.LastOrDefault(x => x.BuyerEmail.Equals(order.BuyerEmail) && x.SubscriberCode.Equals(order.SubscriberCode));
             if (result == null)
                 return null;
 

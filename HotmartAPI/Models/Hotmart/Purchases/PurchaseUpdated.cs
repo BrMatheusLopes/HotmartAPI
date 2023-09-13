@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace HotmartAPI.Hotmart.Models.Purchases
+namespace HotmartAPI.Models.Hotmart.Purchases
 {
     // PURCHASE_EXPIRED, PURCHASE_CHARGEBACK, PURCHASE_REFUNDED, PURCHASE_CANCELED, PurchaseComplete
     public class PurchaseUpdated
