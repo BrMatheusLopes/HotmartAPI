@@ -9,8 +9,6 @@ using Microsoft.Extensions.Logging;
 
 namespace HotmartAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
     public class MonetizzeController : ControllerBase
     {
         private readonly MonetizzeHandler _monetizzeHandler;
