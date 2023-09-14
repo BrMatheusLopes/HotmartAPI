@@ -21,12 +21,18 @@ namespace HotmartAPI.Repository
 
         public Order GetOrderByEmailAndCode(string email, string code)
         {
-            return _context.Orders.LastOrDefault(x => x.BuyerEmail.Equals(email) && x.SubscriberCode.Equals(code));
+            return _context.Orders
+                .Where(x => x.BuyerEmail.Equals(email) && x.SubscriberCode.Equals(code))
+                .OrderByDescending(x => x.Id)
+                .LastOrDefault();
         }
 
         public Order GetOrderByEmailAndTransaction(string email, string transaction)
         {
-            return _context.Orders.LastOrDefault(x => x.BuyerEmail.Equals(email) && x.Transaction.Equals(transaction));
+            return _context.Orders
+                .Where(x => x.BuyerEmail.Equals(email) && x.Transaction.Equals(transaction))
+                .OrderByDescending(x => x.Id)
+                .LastOrDefault();
         }
 
         public Order Create(Order order)
@@ -38,7 +44,11 @@ namespace HotmartAPI.Repository
 
         public Order Update(Order order)
         {
-            var result = _context.Orders.LastOrDefault(x => x.BuyerEmail.Equals(order.BuyerEmail) && x.SubscriberCode.Equals(order.SubscriberCode));
+            var result = _context.Orders
+                .Where(x => x.BuyerEmail.Equals(order.BuyerEmail) && x.SubscriberCode.Equals(order.SubscriberCode))
+                .OrderByDescending(x => x.Id)
+                .LastOrDefault();
+
             if (result == null)
                 return null;
 
